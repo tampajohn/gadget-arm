@@ -8,12 +8,11 @@ import (
 	"gopkg.in/mgo.v2"
 )
 
-var (
-	mgoSession *mgo.Session
-)
+var session *mgo.Session
 
 func Get(connectionVariable string) *mgo.Session {
-	if mgoSession == nil {
+	if session == nil {
+
 		var cs string
 
 		if strings.HasPrefix(connectionVariable, "mongodb://") {
@@ -23,12 +22,13 @@ func Get(connectionVariable string) *mgo.Session {
 		}
 
 		var err error
-		mgoSession, err = mgo.Dial(cs)
 
-		// http://godoc.org/labix.org/v2/mgo#Session.SetMode
-		mgoSession.SetMode(mgo.Monotonic, true)
+		session, err = mgo.Dial(cs)
 
 		errors.Check(err)
+
+		// http://godoc.org/labix.org/v2/mgo#Session.SetMode
+		session.SetMode(mgo.Monotonic, true)
 	}
-	return mgoSession.Clone()
+	return session.Copy()
 }
