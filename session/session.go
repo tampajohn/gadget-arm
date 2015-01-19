@@ -4,7 +4,7 @@ import (
 	"os"
 	"strings"
 
-	"bitbucket.org/tampajohn/gadget-arm/errors"
+	"github.com/jqatampa/gadget-arm/errors"
 	"gopkg.in/mgo.v2"
 )
 
