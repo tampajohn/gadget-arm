@@ -1,7 +1,13 @@
 package errors
 
-func Check(err error) {
+func Check(err error, bad ...func(error)) {
 	if err != nil {
-		panic(err)
+		if bad != nil {
+			for _, f := range bad {
+				f(err)
+			}
+		} else {
+			panic(err)
+		}
 	}
 }
