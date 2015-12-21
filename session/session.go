@@ -30,5 +30,10 @@ func Get(connectionVariable string) *mgo.Session {
 		// http://godoc.org/labix.org/v2/mgo#Session.SetMode
 		session.SetMode(mgo.Monotonic, true)
 	}
+
+	if err := session.Ping(); err != nil {
+		session.Refresh()
+	}
+
 	return session.Copy()
 }
