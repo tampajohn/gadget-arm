@@ -1,39 +1,47 @@
 package session
 
 import (
+	"log"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/jqatampa/gadget-arm/errors"
 	"gopkg.in/mgo.v2"
 )
 
-var session *mgo.Session
+var sessions = make(map[string]*mgo.Session)
+var mutex = &sync.Mutex{}
 
 func Get(connectionVariable string) *mgo.Session {
-	if session == nil {
+	if sessions[connectionVariable] == nil {
+		mutex.Lock()
+		if sessions[connectionVariable] == nil {
+			var cs string
 
-		var cs string
+			if strings.HasPrefix(connectionVariable, "mongodb://") {
+				cs = connectionVariable
+			} else {
+				cs = os.Getenv(connectionVariable)
+			}
 
-		if strings.HasPrefix(connectionVariable, "mongodb://") {
-			cs = connectionVariable
-		} else {
-			cs = os.Getenv(connectionVariable)
+			var err error
+
+			session, err := mgo.Dial(cs)
+
+			errors.Check(err)
+
+			// http://godoc.org/labix.org/v2/mgo#Session.SetMode
+			session.SetMode(mgo.Monotonic, true)
+			sessions[connectionVariable] = session
 		}
-
-		var err error
-
-		session, err = mgo.Dial(cs)
-
-		errors.Check(err)
-
-		// http://godoc.org/labix.org/v2/mgo#Session.SetMode
-		session.SetMode(mgo.Monotonic, true)
+		mutex.Unlock()
 	}
 
-	if err := session.Ping(); err != nil {
-		session.Refresh()
+	if err := sessions[connectionVariable].Ping(); err != nil {
+		sessions[connectionVariable].Refresh()
+		log.Printf("Refreshing session: %v", sessions[connectionVariable])
 	}
 
-	return session.Copy()
+	return sessions[connectionVariable].Copy()
 }
