@@ -1,7 +1,6 @@
 package session
 
 import (
-	"log"
 	"os"
 	"strings"
 	"sync"
@@ -44,11 +43,8 @@ func Get(connectionVariable string, cert ...string) *mgo.Session {
 			sessions[connectionVariable] = session
 		}
 		mutex.Unlock()
-	}
-
-	if err := sessions[connectionVariable].Ping(); err != nil {
+	}else{
 		sessions[connectionVariable].Refresh()
-		log.Printf("Refreshing session: %v", sessions[connectionVariable])
 	}
 
 	return sessions[connectionVariable].Copy()
