@@ -10,6 +10,7 @@ import (
 	"github.com/jqatampa/gadget-arm/errors"
 	"gopkg.in/mgo.v2"
 	"net"
+	"time"
 )
 
 var sessions = make(map[string]*mgo.Session)
@@ -18,6 +19,7 @@ var mutex = &sync.Mutex{}
 func Get(connectionVariable string, cert ...string) *mgo.Session {
 	if sessions[connectionVariable] == nil {
 		mutex.Lock()
+		defer mutex.Unlock()
 		if sessions[connectionVariable] == nil {
 			var cs string
 
@@ -38,11 +40,13 @@ func Get(connectionVariable string, cert ...string) *mgo.Session {
 
 			errors.Check(err)
 
+			session.SetSocketTimeout(10 * time.Second)
+			session.SetSyncTimeout(10 * time.Second)
+
 			// http://godoc.org/labix.org/v2/mgo#Session.SetMode
 			session.SetMode(mgo.Monotonic, true)
 			sessions[connectionVariable] = session
 		}
-		mutex.Unlock()
 	}else{
 		sessions[connectionVariable].Refresh()
 	}
