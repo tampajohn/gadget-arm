@@ -7,10 +7,10 @@ import (
 
 	"crypto/tls"
 	"crypto/x509"
-	"github.com/jqatampa/gadget-arm/errors"
-	"gopkg.in/mgo.v2"
 	"net"
 	"time"
+
+	"github.com/jqatampa/gadget-arm/errors"
 )
 
 var sessions = make(map[string]*mgo.Session)
@@ -21,7 +21,7 @@ func Get(connectionVariable string, cert ...string) *mgo.Session {
 		mutex.Lock()
 		defer mutex.Unlock()
 		if sessions[connectionVariable] == nil {
-			var cs string
+			var cs string, ssl bool
 
 			if strings.HasPrefix(connectionVariable, "mongodb://") {
 				cs = connectionVariable
@@ -29,11 +29,18 @@ func Get(connectionVariable string, cert ...string) *mgo.Session {
 				cs = os.Getenv(connectionVariable)
 			}
 
+			if strings.Contains(connectionVariable, "ssl=true") {
+				connectionVariable = strings.Replace(connectionVariable, "ssl=true", "", -1)
+				connectionVariable = strings.Replace(connectionVariable, "?&", "?", -1)
+				connectionVariable = strings.Replace(connectionVariable, "&&", "&", -1)
+				ssl = true
+			}
+
 			var err error
 
 			var session *mgo.Session
-			if cert != nil {
-				session, err = dialWithSSL(cs, cert[0])
+			if cert != nil || ssl {
+				session, err = dialWithSSL(cs, cert)
 			} else {
 				session, err = mgo.Dial(cs)
 			}
@@ -47,19 +54,23 @@ func Get(connectionVariable string, cert ...string) *mgo.Session {
 			session.SetMode(mgo.Monotonic, true)
 			sessions[connectionVariable] = session
 		}
-	}else{
+	} else {
 		sessions[connectionVariable].Refresh()
 	}
 
 	return sessions[connectionVariable].Copy()
 }
 
-func dialWithSSL(cs, pem string) (session *mgo.Session, err error) {
-	roots := x509.NewCertPool()
-	roots.AppendCertsFromPEM([]byte(pem))
-
+func dialWithSSL(cs, certs []string) (session *mgo.Session, err error) {
 	tlsConfig := &tls.Config{}
-	tlsConfig.RootCAs = roots
+	tlsConfig.InsecureSkipVerify = true
+	
+	if certs != nil {
+		roots := x509.NewCertPool()
+		roots.AppendCertsFromPEM([]byte(certs[0]))
+		tlsConfig.RootCAs = roots
+	}
+	
 
 	dialInfo, err := mgo.ParseURL(cs)
 	if err != nil {
