@@ -10,7 +10,9 @@ import (
 	"net"
 	"time"
 
-	"github.com/jqatampa/gadget-arm/errors"
+	"gopkg.in/mgo.v2"
+
+	"github.com/tampajohn/gadget-arm/errors"
 )
 
 var sessions = make(map[string]*mgo.Session)
