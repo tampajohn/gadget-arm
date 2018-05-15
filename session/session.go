@@ -21,7 +21,8 @@ func Get(connectionVariable string, cert ...string) *mgo.Session {
 		mutex.Lock()
 		defer mutex.Unlock()
 		if sessions[connectionVariable] == nil {
-			var cs string, ssl bool
+			var cs string
+			var ssl bool
 
 			if strings.HasPrefix(connectionVariable, "mongodb://") {
 				cs = connectionVariable
@@ -63,14 +64,14 @@ func Get(connectionVariable string, cert ...string) *mgo.Session {
 
 func dialWithSSL(cs, certs []string) (session *mgo.Session, err error) {
 	tlsConfig := &tls.Config{}
-	tlsConfig.InsecureSkipVerify = true
-	
+
 	if certs != nil {
 		roots := x509.NewCertPool()
 		roots.AppendCertsFromPEM([]byte(certs[0]))
 		tlsConfig.RootCAs = roots
+	} else {
+		tlsConfig.InsecureSkipVerify = true
 	}
-	
 
 	dialInfo, err := mgo.ParseURL(cs)
 	if err != nil {
