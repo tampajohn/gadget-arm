@@ -32,10 +32,10 @@ func Get(connectionVariable string, cert ...string) *mgo.Session {
 				cs = os.Getenv(connectionVariable)
 			}
 
-			if strings.Contains(connectionVariable, "ssl=true") {
-				connectionVariable = strings.Replace(connectionVariable, "ssl=true", "", -1)
-				connectionVariable = strings.Replace(connectionVariable, "?&", "?", -1)
-				connectionVariable = strings.Replace(connectionVariable, "&&", "&", -1)
+			if strings.Contains(cs, "ssl=true") {
+				cs = strings.Replace(cs, "ssl=true", "", -1)
+				cs = strings.Replace(cs, "?&", "?", -1)
+				cs = strings.Replace(cs, "&&", "&", -1)
 				ssl = true
 			}
 
