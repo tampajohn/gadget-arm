@@ -62,7 +62,7 @@ func Get(connectionVariable string, cert ...string) *mgo.Session {
 	return sessions[connectionVariable].Copy()
 }
 
-func dialWithSSL(cs, certs []string) (session *mgo.Session, err error) {
+func dialWithSSL(cs string, certs []string) (session *mgo.Session, err error) {
 	tlsConfig := &tls.Config{}
 
 	if certs != nil {
